@@ -70,26 +70,96 @@
 
 ## 🚀 Instalación Rápida
 
+### Métodos de Instalación por Plataforma
+
+| Plataforma | Script Automático | Comando |
+|------------|------------------|---------|
+| **Linux** (Ubuntu/Debian/Fedora/Arch) | ✅ Bash | `./scripts/install_dependencies.sh` |
+| **macOS** | ✅ Bash + Homebrew | `./scripts/install_dependencies.sh` |
+| **Windows** | ✅ PowerShell | `.\scripts\install_dependencies.ps1` |
+
+---
+
 ### Método Automático (Recomendado)
+
+#### Linux / macOS
 
 ```bash
 # Clonar repositorio
 git clone https://github.com/tu-usuario/mannequin-studio.git
 cd mannequin-studio
 
-# Ejecutar instalador automático
+# Dar permisos de ejecución
 chmod +x scripts/install_dependencies.sh
+
+# Ejecutar instalador automático
 ./scripts/install_dependencies.sh
+
+# Opción: saltar compilación automática
+./scripts/install_dependencies.sh --skip-build
 ```
 
-El script:
-1. ✅ Detecta tu sistema operativo (Ubuntu, Fedora, Arch, macOS)
-2. ✅ Instala todas las dependencias necesarias
-3. ✅ Configura entorno virtual Python
-4. ✅ Compila el proyecto
-5. ✅ Verifica instalación de Vulkan
+El script de Linux/macOS:
+1. ✅ Detecta tu sistema operativo (Ubuntu, Debian, Fedora, Arch, macOS)
+2. ✅ Instala todas las dependencias necesarias (Vulkan, GLFW, GLM, Eigen, Assimp, FFmpeg)
+3. ✅ Configura entorno virtual Python con numpy, PyQt5, PyOpenGL
+4. ✅ Verifica instalación de Vulkan SDK
+5. ✅ Compila el proyecto automáticamente (opcional con --skip-build)
 
-### Instalación Manual
+#### Windows
+
+```powershell
+# Clonar repositorio
+git clone https://github.com/tu-usuario/mannequin-studio.git
+cd mannequin-studio
+
+# Ejecutar instalador PowerShell (como Administrador)
+Set-ExecutionPolicy -Scope Process -Unrestricted
+.\scripts\install_dependencies.ps1
+
+# Opciones avanzadas:
+.\scripts\install_dependencies.ps1 -SkipVcpkg    # Si ya tienes vcpkg configurado
+.\scripts\install_dependencies.ps1 -NoBuild      # Solo instalar dependencias
+```
+
+El script de Windows:
+1. ✅ Verifica prerrequisitos (Git, Visual Studio C++ Tools)
+2. ✅ Ofrece instalar **vcpkg** para gestión de paquetes C++
+3. ✅ Instala dependencias: Vulkan, GLFW, GLM, Eigen, Assimp vía vcpkg
+4. ✅ Descarga FFmpeg portable si no está en PATH
+5. ✅ Crea entorno virtual Python e instala dependencias
+6. ✅ Genera solución de Visual Studio 2022 (.sln)
+
+> **⚠️ Nota para Windows**: El script requiere ejecutarse como **Administrador** para instalar algunas dependencias. Si no tienes permisos de administrador, instala manualmente vcpkg y las librerías.
+
+---
+
+### Requisitos Previos por Plataforma
+
+#### Windows
+| Software | Versión | Enlace |
+|----------|---------|--------|
+| Visual Studio 2022 | Community o superior | [Descargar](https://visualstudio.microsoft.com/) |
+| Componente requerido | "Desarrollo para el escritorio con C++" | Incluido en VS Installer |
+| Git para Windows | 2.x+ | [Descargar](https://git-scm.com/download/win) |
+| Python | 3.8+ | [Descargar](https://www.python.org/downloads/) |
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Mínimo recomendado: Ubuntu 20.04+ o Debian 11+
+sudo apt update
+sudo apt install -y git curl build-essential
+```
+
+#### macOS
+| Software | Versión | Enlace |
+|----------|---------|--------|
+| Xcode Command Line Tools | Latest | `xcode-select --install` |
+| Homebrew | Latest | [Instalar](https://brew.sh/) |
+
+### Instalación Manual (Alternativa)
+
+Si prefieres no usar los scripts automáticos o tienes una configuración especial:
 
 #### Ubuntu/Debian
 ```bash
@@ -202,7 +272,9 @@ mannequin-studio/
 ├── README.md                   # Esta documentación
 ├── LICENSE                     # Licencia MIT
 ├── scripts/
-│   ├── install_dependencies.sh # Instalador automático
+│   ├── install_dependencies.sh # Instalador Linux/macOS (Bash)
+│   ├── install_dependencies.ps1 # Instalador Windows (PowerShell)
+│   ├── README_INSTALL.md       # Guía detallada de instalación
 │   └── mannequin_api.py        # API Python con ejemplos
 ├── src/
 │   ├── main.cpp                # Entry point

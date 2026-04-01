@@ -1,302 +1,236 @@
 #!/bin/bash
-# Script de Instalación Automática para Mannequin Studio
-# Soporta: Ubuntu/Debian, Fedora, Arch Linux, macOS
+# Mannequin Studio - Cross-Platform Dependency Installer
+# Soporta: Ubuntu/Debian, Fedora/RHEL, Arch Linux, macOS
+# Uso: ./install_dependencies.sh [--skip-build]
 
-set -e  # Exit on error
+set -e  # Salir en caso de error
 
-echo "=========================================="
-echo "  Mannequin Studio - Instalador Automático"
-echo "=========================================="
-echo ""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BUILD_DIR="$PROJECT_ROOT/build"
+SKIP_BUILD=false
 
-# Detectar sistema operativo
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Parsear argumentos
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-build)
+            SKIP_BUILD=true
+            shift
+            ;;
+        *)
+            echo "Uso: $0 [--skip-build]"
+            exit 1
+            ;;
+    esac
+done
+
+echo -e "${CYAN}========================================${NC}"
+echo -e "${CYAN}  Mannequin Studio: Install Script     ${NC}"
+echo -e "${CYAN}========================================${NC}"
+
+# Detectar SO
 detect_os() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        if [ -f /etc/debian_version ]; then
-            OS="debian"
-            echo "✓ Sistema detectado: Debian/Ubuntu"
-        elif [ -f /etc/fedora-release ]; then
-            OS="fedora"
-            echo "✓ Sistema detectado: Fedora"
-        elif [ -f /etc/arch-release ]; then
-            OS="arch"
-            echo "✓ Sistema detectado: Arch Linux"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ -f /etc/os-release ]]; then
+        . /etc/os-release
+        if [[ "$ID" == "ubuntu" || "$ID" == "debian" || "$ID" == "linuxmint" ]]; then
+            echo "debian"
+        elif [[ "$ID" == "fedora" || "$ID" == "rhel" || "$ID" == "centos" ]]; then
+            echo "fedora"
+        elif [[ "$ID" == "arch" || "$ID" == "manjaro" ]]; then
+            echo "arch"
         else
-            OS="unknown_linux"
-            echo "⚠ Sistema Linux no reconocido"
+            echo "unknown"
         fi
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        OS="macos"
-        echo "✓ Sistema detectado: macOS"
     else
-        echo "✗ Sistema operativo no soportado"
-        exit 1
+        echo "unknown"
     fi
 }
 
-# Instalar dependencias en Debian/Ubuntu
-install_debian() {
-    echo ""
-    echo "📦 Instalando dependencias en Debian/Ubuntu..."
-    
+OS=$(detect_os)
+echo -e "\n${YELLOW}[1/5] Detectando sistema operativo...${NC}"
+echo "  Sistema detectado: $OS"
+
+# Funciones de instalación por plataforma
+install_deps_debian() {
+    echo -e "${YELLOW}Instalando dependencias para Debian/Ubuntu...${NC}"
     sudo apt-get update
-    
-    # Herramientas de compilación
     sudo apt-get install -y \
-        build-essential \
-        cmake \
         git \
-        pkg-config \
-        wget
-    
-    # Vulkan
-    sudo apt-get install -y \
+        cmake \
+        build-essential \
         libvulkan-dev \
-        vulkan-validationlayers-dev \
         vulkan-tools \
-        mesa-vulkan-drivers
-    
-    # OpenGL y GLFW
-    sudo apt-get install -y \
         libglfw3-dev \
-        libgl1-mesa-dev \
-        libglu1-mesa-dev \
-        libxrandr-dev \
-        libxinerama-dev \
-        libxcursor-dev \
-        libxi-dev
-    
-    # Librerías matemáticas
-    sudo apt-get install -y \
         libglm-dev \
-        libeigen3-dev
-    
-    # Assimp
-    sudo apt-get install -y \
-        libassimp-dev
-    
-    # Python
-    sudo apt-get install -y \
+        libeigen3-dev \
+        libassimp-dev \
         python3 \
-        python3-dev \
-        python3-pip
-    
-    # FFmpeg para exportación de video
-    sudo apt-get install -y ffmpeg
-    
-    echo "✓ Dependencias instaladas correctamente"
+        python3-pip \
+        python3-venv \
+        ffmpeg \
+        libwayland-dev \
+        libxkbcommon-dev \
+        libxrandr-dev \
+        libxi-dev \
+        libxcursor-dev \
+        libxinerama-dev
 }
 
-# Instalar dependencias en Fedora
-install_fedora() {
-    echo ""
-    echo "📦 Instalando dependencias en Fedora..."
-    
-    sudo dnf update -y
-    
+install_deps_fedora() {
+    echo -e "${YELLOW}Instalando dependencias para Fedora/RHEL...${NC}"
     sudo dnf install -y \
-        gcc-c++ \
-        cmake \
         git \
-        pkg-config \
-        wget \
+        cmake \
+        gcc-c++ \
         vulkan-loader-devel \
-        vulkan-validation-layers \
-        vulkan-tools \
+        vulkan-headers \
         glfw-devel \
-        mesa-libGL-devel \
-        mesa-libGLU-devel \
         glm-devel \
         eigen3-devel \
         assimp-devel \
         python3 \
-        python3-devel \
         python3-pip \
-        ffmpeg
+        python3-virtualenv \
+        ffmpeg \
+        ffmpeg-devel
 }
 
-# Instalar dependencias en Arch Linux
-install_arch() {
-    echo ""
-    echo "📦 Instalando dependencias en Arch Linux..."
-    
-    sudo pacman -Syu --noconfirm
-    
+install_deps_arch() {
+    echo -e "${YELLOW}Instalando dependencias para Arch/Manjaro...${NC}"
     sudo pacman -S --noconfirm \
-        base-devel \
-        cmake \
         git \
+        cmake \
+        base-devel \
         vulkan-icd-loader \
-        vulkan-validation-layers \
-        vulkan-tools \
+        vulkan-headers \
         glfw-x11 \
-        glu \
         glm \
         eigen \
         assimp \
         python \
         python-pip \
+        python-virtualenv \
         ffmpeg
 }
 
-# Instalar dependencias en macOS
-install_macos() {
-    echo ""
-    echo "📦 Instalando dependencias en macOS..."
-    
-    # Verificar Homebrew
+install_deps_macos() {
+    echo -e "${YELLOW}Instalando dependencias para macOS...${NC}"
     if ! command -v brew &> /dev/null; then
-        echo "Instalando Homebrew..."
+        echo "Homebrew no encontrado. Instalando..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
-    
-    brew update
-    
     brew install \
-        cmake \
         git \
+        cmake \
         vulkan-loader \
+        vulkan-headers \
         vulkan-validation-layers \
-        vulkan-tools \
         glfw \
         glm \
         eigen \
         assimp \
-        python3 \
+        python@3.11 \
         ffmpeg
-    
-    # En macOS, necesitamos instalar el SDK de Vulkan
-    echo ""
-    echo "⚠ Nota: En macOS, Vulkan puede tener soporte limitado."
-    echo "   Considere usar Metal o la implementación MoltenVK."
 }
 
-# Verificar Vulkan
-verify_vulkan() {
-    echo ""
-    echo "🔍 Verificando instalación de Vulkan..."
-    
+# Instalar dependencias según SO
+echo -e "\n${YELLOW}[2/5] Instalando dependencias del sistema...${NC}"
+case $OS in
+    debian)
+        install_deps_debian
+        ;;
+    fedora)
+        install_deps_fedora
+        ;;
+    arch)
+        install_deps_arch
+        ;;
+    macos)
+        install_deps_macos
+        ;;
+    *)
+        echo -e "${RED}Sistema operativo no soportado automáticamente.${NC}"
+        echo "Por favor instala manualmente: CMake, Vulkan SDK, GLFW, GLM, Eigen, Assimp, Python3, FFmpeg"
+        exit 1
+        ;;
+esac
+echo -e "${GREEN}  [OK] Dependencias del sistema instaladas${NC}"
+
+# Configurar entorno Python
+echo -e "\n${YELLOW}[3/5] Configurando entorno Python...${NC}"
+cd "$PROJECT_ROOT"
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
+source venv/bin/activate
+pip install --upgrade pip
+pip install numpy PyQt5 PyOpenGL
+echo -e "${GREEN}  [OK] Entorno Python configurado${NC}"
+
+# Descargar Vulkan SDK si es necesario (solo Linux/macOS sin paquetes)
+if [[ "$OS" != "debian" ]] || ! dpkg -l | grep -q libvulkan-dev; then
+    echo -e "\n${YELLOW}[4/5] Verificando Vulkan SDK...${NC}"
     if command -v vulkaninfo &> /dev/null; then
-        vulkaninfo --summary 2>/dev/null || echo "⚠ vulkaninfo ejecutado con advertencias"
-        echo "✓ Vulkan instalado correctamente"
+        echo -e "${GREEN}  [OK] Vulkan SDK ya está instalado${NC}"
     else
-        echo "⚠ Vulkan no encontrado o no funciona correctamente"
-        echo "   Asegúrese de tener drivers actualizados para su GPU"
+        echo "  Vulkan SDK no encontrado. Puedes instalarlo desde:"
+        echo "  - Linux: https://vulkan.lunarg.com/sdk/home#linux"
+        echo "  - macOS: brew install vulkan-loader vulkan-headers"
+        echo "  - Windows: https://vulkan.lunarg.com/sdk/home#windows"
     fi
-}
+fi
 
-# Crear entorno virtual de Python
-setup_python() {
-    echo ""
-    echo "🐍 Configurando entorno Python..."
+# Compilar proyecto (opcional)
+if [ "$SKIP_BUILD" = false ]; then
+    echo -e "\n${YELLOW}[5/5] Compilando proyecto...${NC}"
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
     
-    cd scripts
-    
-    if command -v python3 &> /dev/null; then
-        python3 -m venv venv 2>/dev/null || true
-        
-        if [ -d "venv" ]; then
-            source venv/bin/activate
-            pip install --upgrade pip
-            
-            # Instalar paquetes Python necesarios
-            pip install numpy pillow opencv-python-headless 2>/dev/null || true
-            
-            echo "✓ Entorno Python configurado"
-        else
-            echo "⚠ No se pudo crear el entorno virtual"
-        fi
+    # Detectar generador de CMake
+    CMAKE_GENERATOR=""
+    if [[ "$OS" == "macos" ]]; then
+        CMAKE_GENERATOR="-G \"Unix Makefiles\""
+    else
+        CMAKE_GENERATOR="-G \"Unix Makefiles\""
     fi
     
-    cd ..
-}
-
-# Compilar proyecto
-build_project() {
-    echo ""
-    echo "🔨 Compilando Mannequin Studio..."
-    
-    mkdir -p build
-    cd build
-    
-    cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_TESTS=OFF \
-        -DUSE_VULKAN=ON
-    
+    cmake $CMAKE_GENERATOR ..
     make -j$(nproc)
     
-    if [ -f "mannequin_app" ]; then
-        echo "✓ Compilación exitosa!"
-        echo ""
-        echo "Ejecutable creado: $(pwd)/mannequin_app"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}  [OK] Proyecto compilado exitosamente${NC}"
+        echo -e "  Binario generado: $BUILD_DIR/mannequin-studio"
     else
-        echo "✗ Error en la compilación"
+        echo -e "${RED}  [ERROR] La compilación falló. Revisa los mensajes anteriores.${NC}"
         exit 1
     fi
-    
-    cd ..
-}
+else
+    echo -e "\n${YELLOW}[5/5] Saltando compilación (--skip-build activado)${NC}"
+fi
 
-# Mostrar instrucciones finales
-show_instructions() {
-    echo ""
-    echo "=========================================="
-    echo "  ¡Instalación Completada!"
-    echo "=========================================="
-    echo ""
-    echo "Para ejecutar Mannequin Studio:"
-    echo "  cd build && ./mannequin_app"
-    echo ""
-    echo "Controles:"
-    echo "  - ESPACIO: Play/Pause animación"
-    echo "  - CTRL+R: Iniciar/Detener grabación de video"
-    echo "  - ESC: Salir"
-    echo "  - Click izquierdo + arrastrar: Rotar cámara"
-    echo "  - Rueda del mouse: Zoom"
-    echo "  - Click derecho + arrastrar: Mover vista"
-    echo ""
-    echo "Formatos soportados:"
-    echo "  Importar: .obj, .fbx, .gltf, .glb, .bvh"
-    echo "  Exportar: .glb, .gltf, .fbx, .obj, .bvh, .mp4"
-    echo ""
-    echo "Documentación:"
-    echo "  - README.md: Guía general"
-    echo "  - docs/QUICKSTART.md: Inicio rápido"
-    echo "  - docs/ARCHITECTURE.md: Arquitectura del sistema"
-    echo ""
-    echo "¡Disfruta creando personajes 3D!"
-    echo ""
-}
+echo -e "\n${GREEN}========================================${NC}"
+echo -e "${GREEN}  ¡Instalación Completada!             ${NC}"
+echo -e "${GREEN}========================================${NC}"
 
-# Main
-main() {
-    detect_os
-    
-    case $OS in
-        debian|ubuntu)
-            install_debian
-            ;;
-        fedora)
-            install_fedora
-            ;;
-        arch)
-            install_arch
-            ;;
-        macos)
-            install_macos
-            ;;
-        *)
-            echo "✗ Sistema no soportado"
-            exit 1
-            ;;
-    esac
-    
-    verify_vulkan
-    setup_python
-    build_project
-    show_instructions
-}
-
-# Ejecutar
-main "$@"
+echo -e "\n${CYAN}Siguientes pasos:${NC}"
+echo "1. Activa el entorno Python: source venv/bin/activate"
+if [ "$SKIP_BUILD" = false ]; then
+    echo "2. Ejecuta la aplicación: ./build/mannequin-studio"
+else
+    echo "2. Compila manualmente: cd build && cmake .. && make"
+    echo "3. Ejecuta: ./build/mannequin-studio"
+fi
+echo "3. Para scripting Python: python scripts/mannequin_api.py"
+echo ""
+echo -e "${YELLOW}Nota para Windows:${NC}"
+echo "  En Windows, usa el script PowerShell: scripts/install_dependencies.ps1"
+echo "  Requiere PowerShell ejecutado como Administrador."
