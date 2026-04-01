@@ -1,0 +1,63 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.app
+
+# Vulkan shader cache
+*.spv
+*.spirv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Export outputs (keep examples, ignore user exports)
+exports/*.mp4
+exports/*.png
+exports/*.jpg
+!exports/.gitkeep
+
+# Video recording temp files
+*.h264
+*.raw
+
+# Memory dumps
+*.dmp
+
+# Coverage reports
+coverage/
+gcovr/
+
+# Documentation build
+docs/_build/
