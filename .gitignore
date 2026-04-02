@@ -1,76 +1,42 @@
-```gitignore
-# Dependencies
-node_modules/
-.venv/
-venv/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-.julia/
-zig*/
-target/
+```
+# Gradle
 .gradle/
-
-# Build artifacts
-dist/
 build/
-*.pyc
-*.class
-*.o
-*.exe
-*.dll
-*.so
-*.a
-*.obj
-*.out
+target/
 
-# Logs and temporary files
+# IDE
+.idea/
+.vscode/
+
+# Logs
 *.log
-*.tmp
-*.swp
-*.swo
 
-# Environment variables
+# Environment
 .env
 .env.local
 *.env.*
 
-# Editors and IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Coverage reports
+# Coverage
+.coverage
 coverage/
 htmlcov/
-.coverage
 
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+# Python (if applicable)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Node (if applicable)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
 ```
